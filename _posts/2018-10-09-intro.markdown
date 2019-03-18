@@ -4,4 +4,4 @@ title:  "Intro"
 date:   2018-10-09 00:26:54 -0700
 categories: jekyll update
 ---
-Hello, internet. I will be using this site to organize my thoughts about any topics I feel like, but probably focusing on the ones having something to do with code. If you like docker, .net core, poorly written javascript, armchair biology or tinfoil security, there might be something interesting at some point. 
+Hello, internet. I will be using this site to organize my thoughts about any topics I feel like, but probably focusing on the ones having something to do with code. If you like containers, databases, various programming languages, armchair biology or tinfoil security, there might be something interesting at some point. 

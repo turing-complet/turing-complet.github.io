@@ -78,10 +78,29 @@ You can get the public address in the portal or just use
 az container show --resource-group $env:ACI_PERS_RESOURCE_GROUP --name jenkins --query ipAddress.fqdn
 ```
 
-In my case, it is at http://aci-build-demo.westus2.azurecontainer.io/. This can all be wrapped in a script, so it's just one command to spin up a build server. Wow. Such technology.
+In my case, it is at http://aci-build-demo.westus2.azurecontainer.io:8080/. This can all be wrapped in a script, so it's just one command to spin up a build server. Wow. Such technology.
 
 This thing isn't useful though unless we configure it to do things. So let's do that. First step is create a github token and give it to jenkins so it can access your code. This can be done in https://github.com/settings/tokens under "personal access tokens."
 
-More on this later..
 
+![Github token]({{ site.url }}/assets/github-token.png)
 
+Now login to jenkins using the password which will be in the docker logs. If you can't find it there, it's stored in `/var/jenkins_home/secrets/initialAdminPassword` in the container. 
+
+Open blue ocean and create a new pipeline, pasting in the github token. You should see your repositories:
+
+![Repos]({{ site.url }}/assets/github-connect.png)
+
+We have connection! Now we're cooking with \<your favorite cooking fuel\>. 
+
+Before we proceed though, I'm going to gloss over a major part of this - I use jenkins to kick off docker builds, which requires docker engine. In principle we could have azure start "sibling" builds (rather than use nested docker, which is [not ideal](https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/)), but since ACI is a managed service, accessing the docker socket is not allowed. Therefore, I used a jenkins [plugin](https://docs.microsoft.com/en-us/azure/jenkins/jenkins-azure-vm-agents) to automatically provision VM build agents with docker engine on them to run the builds. This requires a one time configuration through the jenkins ui. Perhaps there is a way to make it a template (parametrized credentials, obviously) but I haven't gotten there yet. Once that's squared away, we can get to running builds.
+
+Note: we need to set "docker" as a label on the VM agents, so jenkins will use them.
+
+Going back to the blue ocean ui, we can define a new build by using the pipeline editor (see jenkins [docs](https://jenkins.io/doc/tutorials/create-a-pipeline-in-blue-ocean/)) which apparently contain much of what I've just written about. Anyway, my pipeline now looks like this:
+
+![Pipeline]({{ site.url }}/assets/pipeline.png)
+
+The same pipeline can be found in a Jenkinsfile [here](https://github.com/turing-complet/dockerfiles/blob/master/Jenkinsfile). Now merges to master will push docker images to my azure image registry, which is so easy to setup it's not worth writing about here.
+
+That's pretty much it for now. To conclude, we can spin up a jenkins instance with one command, configure it once to connect to github, auto provision vm agents, store that configuration in a persistent share, and delete the containers when not needed to stop incurring charges. Hopefully this will become more automated so anyone could spin up an entire build system in seconds, but that depends on my attention span...
